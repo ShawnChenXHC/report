@@ -35,7 +35,7 @@ Management Reports are an indispensable source of information for users in an
 organizational role. These reports track the current progression of the user's
 team members and provide up-to-date data to help the user plan for the future.
 
-**[INSERT FIGURE 1.0]**  
+**[INSERT FIGURE 1.0]**
 **Figure 1.0: Navigating to the Management Reports**
 
 A key component of the Management Reports is the filters panel (Figure 1.1).
@@ -46,7 +46,7 @@ greater depth into their data, giving them multiple perspectives and,
 therefore, allowing them to optimize their future strategy. These filters are
 the focus of discussions in this report.
 
-**[INSERT FIGURE 1.1]**  
+**[INSERT FIGURE 1.1]**
 **Figure 1.1: The Management Report Filters**
 
 When this author was tasked with adding a number of newer controls to the
@@ -68,9 +68,9 @@ discuss how it addresses the weaknesses of the old system.
 For the aforementioned purposes, the author now finds it necessary to provide a
 walkthrough of the old system. Two things, however, must be noted before
 continuing. First, unless special exception is noted, all subsequent code to be
-shown comes from the file `reports.js`. Second, in all code shown, the
-appearance of the sequence of characters `/* ... */` is to denote code omitted
-for the purpose of keeping this report short and concise.
+shown in this report comes from the file `reports.js`. Second, in all code
+shown, the appearance of the sequence of characters `/* ... */` is to denote
+code omitted for the purpose of keeping this report short and concise.
 
 In brief, the Management Report Filters work as follows:
 
@@ -119,42 +119,89 @@ and instances of it can be treated like a regular Object. The purpose of the
 `mgmt_report_filters` is to keep track of the current state of controls within
 the filters panel.
 
-### 2.1.1 - The Initialization Step
+By examining the "Click" event handler placed upon the "Apply" button in the
+filter pane (Figure 2.1), the purpose of the `mgmt_report_filters` variable
+becomes clear.
 
-Like the stage crew of a theatrical production, the `init_reports()` function
-is responsible for setting the stage in which the "act" of the Reports pages
-will play out. It is an immense function whose many lines not only set up the
-Management Report Filters, but most everything else in the Reports sections as
-well.
+``` JS
+// body is equal to $(document.body)
+body.on('click', '[data-id="report-filter-apply"], [data-id="mgmt-report-filter-apply"]', function() {
 
-The function, with a large amount of omitted code, is shown in figure 2.0.
+  /* ... */
+
+  if ($('#filters-mgmt-checkbox1').is(":checked")) {
+    if ($('#filters-mgmt-comparison').val() == "BN") {
+      mgmt_report_filters.opp_value = /* .. */;
+    } else {
+      mgmt_report_filters.opp_value = /* ... */;
+    }
+  } else {
+    mgmt_report_filters.opp_value = /* ... */;
+  }
+
+  /* ... */
+
+	setMgmtReportFilters(mgmt_report_filters);
+
+	if (page_id == 'opportunities' || page_id == 'prj_summary') {
+		global.pages.mgmtreports.load({
+			pageid: page_id
+		});
+	} else {
+		/* ... */
+		global.currentlist.getNewData();
+	}
+
+  /* ... */
+
+});
+```
+**Figure 2.1: The "Click" event handler on the "Apply" button**
+
+As one can see, the event handler shown above is being applied to any element
+whose `data-id` attribute is equal to one of "report-filter-apply" and
+"mgmt-report-filter-apply". In practice, this means that this "Click" event
+handler is being attached to two different "Apply" buttons. This seemingly
+innocuous practice is another weakness of the system which is discussed in
+further detail in section 2.1.2.
 
 
-As one can see, `mgmt_report_filters` is among a trio `List_Map_Data` objects.
-The `List_Map_Data` class is a simple wrapper for a JavaScript (JS) Object, and
-one can treat instances of it just like any plain JS Object. The role of
-`mgmt_report_filters` is to keep track of the current state of the filters
-panel.
 
-As one can see, `mgmt_report_filters` is among a trio of `List_Map_Data`
-objects. The `List_Map_Data` class is a simple wrapper for a plain JavaScript
-(JS) Object, and one can treat instances of it just any plain JS Object.
+In any case, Figure 2.1 shows that when the user clicks on the "Apply" button
+in the Filters, the first thing that happens is
 
-In the old system, the main role of `mgmt_report_filters` is to keep track
+In any case, Figure 2.1 shows that when the user clicks on the "Apply" button,
+the event handler will first set `mgmt_report_filters.opp_value` to some value
+depending on the
+
+As one can see, the event handler shown above is actually being applied to two
+different sets of elements, those whose `data-id` attribute is equal to
+"report-filter-apply" and
+
+As one can see, the event handler shown above is actually being attached to two
+different elements, one with `[data-id="report-filter-apply"]`
+
+
+
+
 
 ### 2.1.1 - Inconsistency
 
 The function is neither consistent with itself nor with other parts of the
 Application.
 
-### 2.1.2 - Repetition
+### 2.1.2 - Modularity
+
+One of the principle advantages of Objected Oriented Programming is that it
+enables a
+
+The system is not very modular. A look into some of the bindings defined in
+`init_reports()` reveal this.
+
+### 2.1.3 - Repetition
 
 The Don't Repeat Yourself (DRY) Principle is a well-established pillar in good
 program design.
 
-### 2.1.3 - Modularity
-
-The system is not very modular. A look into some of the bindings defined in
-`init_reports()` reveal this.
 
 ### 2.2 - The Newer System
