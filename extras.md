@@ -1,5 +1,22 @@
 
 
+In any case, Figure 2.1 shows that when the user clicks on the "Apply" button
+in the Filters, the first thing that happens is
+
+In any case, Figure 2.1 shows that when the user clicks on the "Apply" button,
+the event handler will first set `mgmt_report_filters.opp_value` to some value
+depending on the
+
+As one can see, the event handler shown above is actually being applied to two
+different sets of elements, those whose `data-id` attribute is equal to
+"report-filter-apply" and
+
+As one can see, the event handler shown above is actually being attached to two
+different elements, one with `[data-id="report-filter-apply"]`
+
+
+
+
 These three steps will now be elaborated upon in detail.
 
 1.  When the Application first starts, a function called `init_reports()`,
