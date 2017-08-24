@@ -9,7 +9,8 @@
 2.0 | The Company List Filters
 2.1 | The "Regions" filter control in action Project List Filters; the exact behaviour occurs in Management Report Filters
 2.2 | The "Click" event handler attached to the "Regions" filter control in Management Report Filters
-2.? | The start of init_report()
+2.3 | The init_reports() function
+2.4 | "mgmt_report_filters" changes to reflect the filters panel
 
 ## 1.0 - Introduction
 
@@ -59,12 +60,8 @@ it addresses the weaknesses of the old system.
 
 ### 2.1 - The Existing Infrastructure
 
-For the aforementioned purposes, the author now finds it necessary to provide a
-walkthrough of the old system. Two things, however, must be noted before
-continuing. First, unless special exception is noted, all subsequent code to be
-shown in this report comes from the file `reports.js`. Second, in all code
-shown, the appearance of the sequence of characters `/* ... */` is to denote
-code omitted for the purpose of keeping this report short and concise.
+For the aforementioned purposes, the author now finds it helpful to provide an
+overview of the old system.
 
 In brief, the Management Report Filters work as follows:
 
@@ -79,16 +76,22 @@ In brief, the Management Report Filters work as follows:
 4.  When the user clicks on the "Apply" button in the filters panel, the
     contents of `mgmt_report_filters` is copied over to a "mirror" Object in
     the closure of the `initReport()` function.
-5.  This mirror Object is *stringified* and inserted into the URL of various
-    various requests via `$.ajax()`, thus sending the filter information to
-    the backend and ensuring that the response returned is filtered.
+5.  This mirror Object is *stringified* and inserted into the header of various
+    XMLHttpRequests (Performed via `$.ajax()`), thus sending the filter
+    information to the backend and ensuring that the response returned is
+    filtered.
 
 Having outlined the system, the following sections will dive into the system
-in greater depth, with an emphasis on highlighting its weaknesses.
+in greater depth, with an emphasis on highlighting its weaknesses. Two things,
+however, must be noted before continuing. First, without exception, all
+subsequent code to be shown in this report comes from the file `reports.js`.
+Second, in all code shown, the appearance of the sequence of characters
+`/* ... */` is to denote code omitted for the purpose of keeping this report
+short and concise.
 
 ### 2.1.1 - An Inconsistent System
 
-The first issue of the implementation of the Management Report Filters is the
+The first issue in the implementation of the Management Report Filters is the
 many inconsistencies it has both within itself and with other parts of the
 application. Here, the most concerning of these inconsistencies will be
 discussed.
@@ -101,12 +104,11 @@ to find the companies they need.
 **[INSERT FIGURE 2.0]**  
 **Figure 2.0: The Project List Filters**
 
-Several filter controls between the two filters are very much similar, while
-some others are actually exactly the same. Take, for example, the "Regions"
-filter control. In both filter panels, a click on the little white box with the
-"plus" symbol will open an overlay. The user can then make their selection in
-the overlay, click "Save," and see their selection show up in the box
-(Figure 2.1).
+Several filter controls between the two filters are very much similar, if not
+exactly the same. Take, for example, the "Regions" filter control. In both
+filter panels, a click on the little white box with the "plus" symbol will open
+an overlay. The user can then make their selection in the overlay, click
+"Save," and see their selection show up in the box (Figure 2.1).
 
 **[INSERT FIGURE 2.1]**  
 **Figure 2.1: The "Regions" filter control in action Project List Filters; the
@@ -120,7 +122,7 @@ this strategy is too lengthy to be described here, but it is roughly as follows:
 
 1.  Choose a DOM element to be used as a list filter, initialize it by calling
     `$(selector).list_filter()`, where `selector` is a selector string
-    that unique identifies the element
+    that unique identifies the element.
 2.  As the user interacts with the element (e.g., Clicking on it to see an
     selection overlay), register the inputs given by the user and save them by
     calling `$(selector).list_filter('set_values', input)`, where `input` can
@@ -147,10 +149,12 @@ highlight.
 
 The DOM element used for the "Regions" filter control within the Management
 Report Filters has the attribute `data-role` set to the value
-`report-selection-overlay`. As such, Figure 2.2 shows the "click" event handler
-attached to this element.
+`report-selection-overlay`. Figure 2.2, which is an excerpt from the
+`init_report()` function in `reports.js`, shows the attaching of a "click"
+event handler to this element.
 
 ``` JS
+// Note: body is a variable which holds document.body
 body.on('click',
   '[data-role="report-selection-overlay"]'
   + ',[data-role="mgmt-report-selection-overlay"]'
@@ -184,34 +188,42 @@ body.on('click',
 **Figure 2.2: The "Click" event handler attached to the "Regions" filter
 control in Management Report Filters**
 
-The author has purposefully omitted much 
+This event handler, much of whose body has been intentionally omitted, will
+cause an overlay selection window to appear when the user clicks on the
+"Regions" filter control. Functionally speaking, this event handler achieves
+its purpose. But, design wise, it leaves a lot to be desired.
 
-Much of the event handler has been omitted for the sake of brevity, but enough
-has been shown to demonstrate the issue.
+As one can see from the selector being passed to the `on()` function, this
+event handler is attached to all elements whose `data-role` attribute is one of
+the following: `report-selection-overlay`, `mgmt-report-selection-overlay` or
+`prjtrack-report-selection-overlay`. This shows that the behaviour of the
+"Regions" filter control is shared by many other elements. By attaching the
+same event handler to all of these elements, a good deal of code repetition is
+eliminated. Nevertheless, because of subtle differences between these three
+classes of elements, the function must make additional checks during runtime in
+order to alter its behaviour accordingly.
 
-Because the "Regions" filter control is
+When used sparingly, this design is acceptable as it is an expedient and
+relatively straight-forward solution. But a review of the `init_reports()`
+function shows that these types of checks are occurring over and over again.
+This design, in addition to being repetitive and hard to maintain, pose a major
+challenge to future growth and expansion. If more complex requirements and edge
+cases appear in the future, one can easily find themselves trapped in "If-Else
+Hell" with this design.
 
-As one can see from the call to `on()`
-
-
-This event handler, as one can tell
-from the selector being passed to `on()`, is being attached multiple elements.
-
-Much of the event handler has been omitted for the sake of brevity, but enough
-has been shown to demonstrate the issue. As one can see from the selector
-given to
-
-
+Speaking of code repetition, the author would like now to highlight the most
+glaring issue of the Management Report Filters' implementation. To do so, this
+report will now examine what happens when the filters is applied.
 
 ### 2.1.3 - A Senseless Repetition
 
-
-To begin, the author would like to draw the reader's attention to the
-`init_reports()` function, whose definition is shown, with a great number of
-omissions, in Figure 2.0.
+As mentioned earlier, the `init_reports()` function creates an enclosure in
+which an variable, `mgmt_report_filters`, is defined (Figure 2.3)
 
 ``` JS
 var init_reports = (function() {
+  // Note: List_Map_Data is a wrapper class for the regular JavaScript
+  // Object. Instances of it can be treated like a regular Object.
 	var report_filters = new List_Map_Data();
 	var mgmt_report_filters = new List_Map_Data();
 	var prjtrack_report_filters = new List_Map_Data();
@@ -219,88 +231,38 @@ var init_reports = (function() {
   /* ... */
 
   return function(body) {
-    // ...
+    /* ... */
+
+    body.on('click',
+      '[data-id="report-filter-apply"]'
+      + ', [data-id="mgmt-report-filter-apply"]',
+      function() {
+          /* ... */
+
+        	setMgmtReportFilters(mgmt_report_filters);
+
+          /* ... */
+      });
+
+    /* ... */
   }
 })();
 ```
-**Figure 2.0: The start of init_reports()**
+**Figure 2.3: The init_reports() function**
 
-As one can see, the `init_reports()` function is an Immediately Invoked
-Function Expression, within whose *closure* is defined a variable,
-`mgmt_report_filters`. `mgmt_report_filters` is defined as an instance of the
-`List_Map_Data` class. The `List_Map_Data` is a simple wrapper class for the
-plain JavaScript Object, and instances of it can be treated like a regular
-Object. The purpose of the `mgmt_report_filters` is to keep track of the
-current state of controls within the filters panel.
+The `mgmt_report_filters` variable holds an object which represents the state
+of the the Management Report Filters. As the user interacts with the Filters,
+this object is updated to reflect the inputs given (Figure 2.4).
 
-This purpose is perhaps more clearly demonstrated when one examines the "Click"
-event handler placed upon the "Apply" button in the filter pane (Figure 2.1).
+**[INSERT FIGURE 2.4]**
+**Figure 2.4: "mgmt_report_filters" changes to reflect the filters panel**
+
+Since the element used for the "Apply" button in the Management Report Filters
+matches the selector `[data-id="mgmt-report-filter-apply"]`, Figure 2.3 also
+shows that the `init_report()` function, when executed, will attach a "Click"
+event handler to the button. This event handler is the function responsible for
+the application of a filter.
 
 ``` JS
-// body is equal to $(document.body)
-body.on('click', '[data-id="report-filter-apply"], [data-id="mgmt-report-filter-apply"]', function() {
 
-  /* ... */
-
-  if ($('#filters-mgmt-checkbox1').is(":checked")) {
-    if ($('#filters-mgmt-comparison').val() == "BN") {
-      mgmt_report_filters.opp_value = /* .. */;
-    } else {
-      mgmt_report_filters.opp_value = /* ... */;
-    }
-  } else {
-    mgmt_report_filters.opp_value = /* ... */;
-  }
-
-  /* ... */
-
-	setMgmtReportFilters(mgmt_report_filters);
-
-	if (page_id == 'opportunities' || page_id == 'prj_summary') {
-		global.pages.mgmtreports.load({
-			pageid: page_id
-		});
-	} else {
-		/* ... */
-		global.currentlist.getNewData();
-	}
-
-  /* ... */
-
-});
 ```
-**Figure 2.1: The "Click" event handler on the "Apply" button**
-
-As one can see, the event handler shown above is being applied to any element
-whose `data-id` attribute is equal to one of "report-filter-apply" and
-"mgmt-report-filter-apply". In practice, this means that this "Click" event
-handler is being attached to two different "Apply" buttons. This seemingly
-innocuous practice is another weakness of the system which is discussed in
-further detail in section 2.1.2.
-
-First, the line `setMgmtReportFilters(mgmt_report_filters);` must be brought to
-attention. This is arguably the most important line of the function. Here, a
-global function, `setMgmtReportFilters()`, is called and given
-
-
-
-### 2.1.1 - Inconsistency
-
-The function is neither consistent with itself nor with other parts of the
-Application.
-
-### 2.1.2 - Modularity
-
-One of the principle advantages of Objected Oriented Programming is that it
-enables a
-
-The system is not very modular. A look into some of the bindings defined in
-`init_reports()` reveal this.
-
-### 2.1.3 - Repetition
-
-The Don't Repeat Yourself (DRY) Principle is a well-established pillar in good
-program design.
-
-
-### 2.2 - The Newer System
