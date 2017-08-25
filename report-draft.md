@@ -7,8 +7,8 @@
 1.0 | Navigating to the Management Reports
 1.1 | The Management Report Filters
 2.0 | The Company List Filters
-2.1 | The "Regions" filter control in action Project List Filters; the exact behaviour occurs in Management Report Filters
-2.2 | The "Click" event handler attached to the "Regions" filter control in Management Report Filters
+2.1 | The "Probability" filter control in action Project List Filters; the exact behaviour occurs in Management Report Filters
+2.2 | The "Click" event handler attached to the "Probability" filter control in Management Report Filters
 2.3 | The init_reports() function
 2.4 | "mgmt_report_filters" changes to reflect the filters panel
 
@@ -21,13 +21,13 @@ that enable BASF marketing professionals to make better-informed decisions and
 to better engage with their customers. Among its many features, the Application
 derives much value from its Reporting Utilities. Easily accessible via the top
 navigation bar, the "Reports" sections of the Application shows various reports
-generated form the data the application has collected from its users.
+generated from the data the Application has collected from its users.
 
 Because the Application accommodates for different classes of users, the
 Reports section likewise will also show different reports depending on the
 specific roles and responsibilities of the current user. Here, the author would
-like to highlight the Management Reports. Accessed via the "Mgmt Reports" tab
-in the sliding side navigation bar (Figure 1.0), these reports are an
+like to highlight the Management Reports. Accessed via the "Management Reports"
+tab in the sliding side navigation bar (Figure 1.0), these reports are an
 indispensable source of information for users in an organizational role.
 
 **[INSERT FIGURE 1.0]**  
@@ -45,22 +45,21 @@ the focus of discussions in this report.
 **Figure 1.1: The Management Report Filters**
 
 When this author was tasked with adding a number of newer controls to the
-Management Report Filters (Henceforth occasionally abbreviated to "Filters"),
-he had to examine the existing infrastructure to understand how the Filters
-worked. In doing so, the author discovered several points of weakness in the
-existing framework which created unnecessary complications and made future
-maintenance and expansion difficult. The author thus sought to update the
-system with the objective of making it more flexible, streamlined and resilient
-to change. The purpose of this report is thus two-fold. First, it will examine
-and provide an analysis of the existing infrastructure in order to highlight
-its deficiencies. Second, it will detail the author's solution and discuss how
-it addresses the weaknesses of the old system.
+Management Report Filters, he had to examine the existing infrastructure to
+understand how the Filters worked. In doing so, the author discovered several
+points of weakness in the existing framework which created unnecessary
+complications and made future maintenance and expansion difficult. If steps are
+not taken to correct these shortcomings, then the development of not just the
+filters, but the Reports sections as a whole, is likely to be hindered. Thus,
+the purpose of this report is to provide the first step in the process of
+improvement by describing and analyzing the deficiencies in the existing
+infrastructure.
 
 ## 2.0 - Analysis
 
 ### 2.1 - The Existing Infrastructure
 
-For the aforementioned purposes, the author now finds it helpful to provide an
+For the aforementioned purpose, the author now finds it helpful to provide an
 overview of the old system.
 
 In brief, the Management Report Filters work as follows:
@@ -75,7 +74,7 @@ In brief, the Management Report Filters work as follows:
     `mgmt_report_filters`.
 4.  When the user clicks on the "Apply" button in the filters panel, the
     contents of `mgmt_report_filters` is copied over to a "mirror" Object in
-    the closure of the `initReport()` function.
+    the *closure* of the `initReport()` function.
 5.  This mirror Object is *stringified* and inserted into the header of various
     XMLHttpRequests (Performed via `$.ajax()`), thus sending the filter
     information to the backend and ensuring that the response returned is
@@ -89,7 +88,7 @@ Second, in all code shown, the appearance of the sequence of characters
 `/* ... */` is to denote code omitted for the purpose of keeping this report
 short and concise.
 
-### 2.1.1 - An Inconsistent System
+### 2.2 - An Inconsistent System
 
 The first issue in the implementation of the Management Report Filters is the
 many inconsistencies it has both within itself and with other parts of the
@@ -105,20 +104,21 @@ to find the companies they need.
 **Figure 2.0: The Project List Filters**
 
 Several filter controls between the two filters are very much similar, if not
-exactly the same. Take, for example, the "Regions" filter control. In both
+exactly the same. Take, for example, the "Probability" filter control. In both
 filter panels, a click on the little white box with the "plus" symbol will open
 an overlay. The user can then make their selection in the overlay, click
 "Save," and see their selection show up in the box (Figure 2.1).
 
 **[INSERT FIGURE 2.1]**  
-**Figure 2.1: The "Regions" filter control in action Project List Filters; the
-exact behaviour occurs in Management Report Filters**
+**Figure 2.1: The "Probability" filter control in action Project List Filters;
+the exact behaviour occurs in Management Report Filters**
 
 As a result of their similarities in behaviour, one would expect that these two
 filters controls also share similar implementations. This, however, is not the
-case. The "Regions" filter in Project List Filters is implemented through what
-the author would like to call as the `$.list_filter()` strategy. The details of
-this strategy is too lengthy to be described here, but it is roughly as follows:
+case. The "Probability" filter in Project List Filters is implemented through
+what the author would like to call as the `$.list_filter()` strategy. The
+details of this strategy is too lengthy to be described here, but it is roughly
+as follows:
 
 1.  Choose a DOM element to be used as a list filter, initialize it by calling
     `$(selector).list_filter()`, where `selector` is a selector string
@@ -140,14 +140,14 @@ Inconsistencies such as this scatter themselves across the implementation of
 the Management Report Filters and present challenges for future development as
 they force to developer to have to deal with multiple systems.
 
-At this stage, one may be wondering how the "Regions" filter control and others
-like it are implemented in the Management Report Filters. Diving into this
-question reveals the next shortcoming of the Filters the author wishes to
+At this stage, one may be wondering how the "Probability" filter control and
+others like it are implemented in the Management Report Filters. Diving into
+this question reveals the next shortcoming of the Filters the author wishes to
 highlight.
 
-### 2.1.2 - A Lack of Modularity
+### 2.3 - A Lack of Modularity
 
-The DOM element used for the "Regions" filter control within the Management
+The DOM element used for the "Probability" filter control within the Management
 Report Filters has the attribute `data-role` set to the value
 `report-selection-overlay`. Figure 2.2, which is an excerpt from the
 `init_report()` function in `reports.js`, shows the attaching of a "click"
@@ -185,19 +185,19 @@ body.on('click',
     });
   });
 ```
-**Figure 2.2: The "Click" event handler attached to the "Regions" filter
+**Figure 2.2: The "Click" event handler attached to the "Probability" filter
 control in Management Report Filters**
 
 This event handler, much of whose body has been intentionally omitted, will
 cause an overlay selection window to appear when the user clicks on the
-"Regions" filter control. Functionally speaking, this event handler achieves
-its purpose. But, design wise, it leaves a lot to be desired.
+"Probability" filter control. Functionally speaking, this event handler
+achieves its purpose. But, design wise, it leaves a lot to be desired.
 
 As one can see from the selector being passed to the `on()` function, this
 event handler is attached to all elements whose `data-role` attribute is one of
 the following: `report-selection-overlay`, `mgmt-report-selection-overlay` or
 `prjtrack-report-selection-overlay`. This shows that the behaviour of the
-"Regions" filter control is shared by many other elements. By attaching the
+"Probability" filter control is shared by many other elements. By attaching the
 same event handler to all of these elements, a good deal of code repetition is
 eliminated. Nevertheless, because of subtle differences between these three
 classes of elements, the function must make additional checks during runtime in
@@ -212,21 +212,21 @@ cases appear in the future, one can easily find themselves trapped in "If-Else
 Hell" with this design.
 
 Speaking of code repetition, the author would like now to highlight the most
-glaring issue of the Management Report Filters' implementation. To do so, this
-report will now examine what happens when the filters is applied.
+glaring issue of the Management Report Filters' implementation. To do so, an
+analysis of exactly how the filters are applied is in order.
 
-### 2.1.3 - A Senseless Repetition
+### 2.4 - A Senseless Repetition
 
 As mentioned earlier, the `init_reports()` function creates an enclosure in
-which an variable, `mgmt_report_filters`, is defined (Figure 2.3)
+which a variable, `mgmt_report_filters`, is defined (Figure 2.3).
 
 ``` JS
 var init_reports = (function() {
   // Note: List_Map_Data is a wrapper class for the regular JavaScript
   // Object. Instances of it can be treated like a regular Object.
-	var report_filters = new List_Map_Data();
-	var mgmt_report_filters = new List_Map_Data();
-	var prjtrack_report_filters = new List_Map_Data();
+  var report_filters = new List_Map_Data();
+  var mgmt_report_filters = new List_Map_Data();
+  var prjtrack_report_filters = new List_Map_Data();
 
   /* ... */
 
@@ -250,19 +250,89 @@ var init_reports = (function() {
 ```
 **Figure 2.3: The init_reports() function**
 
-The `mgmt_report_filters` variable holds an object which represents the state
-of the the Management Report Filters. As the user interacts with the Filters,
-this object is updated to reflect the inputs given (Figure 2.4).
+This variable holds an object that will keep track of the Management Report
+Filters as the user interacts with its various controls. This is clearly
+demonstrated in Figure 2.4.
 
 **[INSERT FIGURE 2.4]**
 **Figure 2.4: "mgmt_report_filters" changes to reflect the filters panel**
 
-Since the element used for the "Apply" button in the Management Report Filters
-matches the selector `[data-id="mgmt-report-filter-apply"]`, Figure 2.3 also
-shows that the `init_report()` function, when executed, will attach a "Click"
-event handler to the button. This event handler is the function responsible for
-the application of a filter.
+When the user clicks on the "Apply" button, the "Click" event handler shown in
+the latter half of Figure 2.3 runs. This event handler will perform all of the
+steps necessary in applying the filters. The author has chosen the show the
+only part of this function relevant to the discussions at hand: the call to the
+function `setMgmtReportFilters()`.
+
+This function has a global scope, thus allowing it to be invoked from anywhere
+throughout the program. However, its definition is found within the *enclosure*
+of another function, `initReport()` (Figure 2.5).
 
 ``` JS
+var initReport = ( function() {
+  var report_filters = new List_Map_Data();
+  var mgmt_report_filters = new List_Map_Data();
+  var prjtrack_report_filters = new List_Map_Data();
 
+  /* ... */
+
+  setMgmtReportFilters = function(filters) {
+  	mgmt_report_filters.add('region', (filters.region || []).slice(0));
+  	mgmt_report_filters.add('territory', (filters.territory || []).slice(0));
+  	mgmt_report_filters.add('sector', (filters.sector || []).slice(0));
+  	mgmt_report_filters.add('productcategory', (filters.productcategory || []).slice(0));
+  	mgmt_report_filters.add('probability', (filters.probability || []).slice(0));
+  	mgmt_report_filters.add('opp_value', filters.opp_value);
+  	mgmt_report_filters.add('opp_date', filters.opp_date);
+  	mgmt_report_filters.add('opp_owner', (filters.opp_owner || []).slice(0));
+  	mgmt_report_filters.add('country', (filters.country || []).slice(0));
+  	mgmt_report_filters.add('salesarea', (filters.salesarea || []).slice(0));
+  }
+
+  /* ... */
+
+  return function(options) {
+    /* ... */
+  }
+})();
 ```
+**FIGURE 2.5: The initReport() function, with the definition for
+setMgmtReportFilters()**
+
+If the trio of variables at the beginning of the `initReport()` function seems
+familiar, it is because they are an exact replica of another trio of variables
+seen earlier in the `init_reports()` function. Furthermore, it is also clear
+from Figure 2.5 that the only purpose of the `setMgmtReportFilters()` function
+is to transfer data from its `filters` argument over to the
+`mgmt_report_filters` variables defined in the enclosure of `init_reports()`.
+
+Thus, in Figure 2.3, when the "Click" event handler on the "Apply" button makes
+a call to `setMgmtReportFilters()`, all that happens is that the contents of
+the `mgmt_report_filters` variable in the `init_reports()` function is copied
+over to the `mgmt_report_filters` variable in the `initReport()` function.
+
+Further examination reveals that the `setMgmtReportFilters()` function is only
+ever called from within the `init_reports()` function. Additionally, in all
+instances, the `mgmt_report_filters` variable (The one in the enclosure of
+`init_reports()`) is passed as the sole argument. This demonstrates that the
+only purpose of the `setMgmtReportFilters()` function is to "extend" the scope
+of the `mgmt_report_filters` variable to the `initReport()` function.
+
+This is hardly a good reason for this design. With this repetition comes the
+need to maintain two distinct sets of objects. As one makes changes to the
+Management Report Filters in the future, they must ensure that the changes are
+reflected in both `init_reports()` and `initReport()`. Furthermore, if anything
+ever breaks, this repetition also means that there is one more point which the
+developer might have to check in their efforts to debug.
+
+## 3.0 - Conclusions
+
+The Management Report Filters are a crucial component of the Management
+Reports. While it is functionally stable, several weaknesses in its
+implementation and design create unnecessary complications and hinder future
+development. When one seeks expediency in solving a problem or implementing a
+feature, the failure to follow good design principles is often the cost. For
+issues with limited scope, this tradeoff is often acceptable. But as the system
+grows and expands, there is always a good case to be made for going back and
+reviewing previous design choices to analyze their scalability for the future.
+Failure to do so often leads to convoluted and unwieldy programs that are as
+hard to maintain as they are to be expanded upon.

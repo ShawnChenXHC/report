@@ -1,4 +1,21 @@
 
+
+The purpose of this report is thus to provide the first
+step in the process of improving the filters by
+
+The purpose of this report is thus to
+
+The importance of the Management Report
+Filters demands that its implementation be carefully considered and
+well-designed. This report will
+
+The author thus sought to update the
+system with the objective of making it more flexible, streamlined and resilient
+to change. The purpose of this report is thus two-fold. First, it will examine
+and provide an analysis of the existing infrastructure in order to highlight
+its deficiencies. Second, it will detail the author's solution and discuss how
+it addresses the weaknesses of the old system.
+
 This purpose is perhaps more clearly demonstrated when one examines the "Click"
 event handler placed upon the "Apply" button in the filter pane (Figure 2.1).
 
